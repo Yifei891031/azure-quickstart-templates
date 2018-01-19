@@ -90,7 +90,7 @@ done
 # Install Oracle Java
 install_java()
 {
-    if [ -f "jdk-8u151-linux-x64.tar.gz" ];
+    if [ -f "jdk-8u161-linux-x64.tar.gz" ];
     then
         log "Java already downloaded"
         return
@@ -101,7 +101,8 @@ install_java()
     MAX_RETRY=5
     while [ $RETRY -lt $MAX_RETRY ]; do
         log "Retry $RETRY: downloading jdk-8u151-linux-x64.tar.gz"
-        wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
+        BASE_URL_8=http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz
+        wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" "${BASE_URL_8}"
         if [ $? -ne 0 ]; then
             let RETRY=RETRY+1
         else
@@ -109,12 +110,12 @@ install_java()
         fi
     done
     if [ $RETRY -eq $MAX_RETRY ]; then
-        log "Failed to download jdk-8u151-linux-x64.tar.gz"
+        log "Failed to download jdk-8u161-linux-x64.tar.gz"
         exit 1
     fi
     
-    tar xzf jdk-8u151-linux-x64.tar.gz -C /var/lib
-    export JAVA_HOME=/var/lib/jdk1.8.0_151
+    tar xzf jdk-8u161-linux-x64.tar.gz -C /var/lib
+    export JAVA_HOME=/var/lib/jdk1.8.0_161
     export PATH=$PATH:$JAVA_HOME/bin
     log "JAVA_HOME: $JAVA_HOME"
     log "PATH: $PATH"
