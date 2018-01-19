@@ -21,7 +21,7 @@
       "metadata": {
         "description": "Number of VM instances (200 or less)."
       },
-      "defaultValue": 5,
+      "defaultValue": 30,
       "maxValue": 200
     },
     "adminUsername": {
@@ -52,7 +52,7 @@
     }
   },
   "variables": {
-    "storageAccountType": "Premium_LRS",
+    "storageAccountType": "Standard_LRS",
     "addressPrefix": "10.0.0.0/16",
     "subnetPrefix": "10.0.0.0/24",
     "namingInfix": "[toLower(parameters('vmssName'))]",
@@ -65,6 +65,7 @@
     "backendPoolName": "[concat(variables('namingInfix'), '-bepool')]",
     "nicName": "[concat(variables('namingInfix'), '-nic')]",
     "masterName": "[concat(variables('namingInfix'), '-master')]",
+    "clientName": "[concat(variables('namingInfix'), '-client')]",
     "availabilitySetName": "[concat(variables('namingInfix'), '-master-set')]",
     "nsgName": "[concat(variables('namingInfix'), '-master-nsg')]",
     "ipConfigName": "[concat(variables('namingInfix'), '-ipconfig')]",
@@ -74,8 +75,9 @@
     "sshProbeId": "[concat(variables('loadBalancerId'),'/probes/sshProbe')]",
     "subnetName": "[concat(variables('namingInfix'), '-subnet')]",
     "vmStorageAccountContainerName": "vhds",
-    "masterSize": "Standard_DS3_v2",
-    "vmSku": "Standard_DS4_v2",
+    "masterSize": "Standard_DS1_v2",
+    "vmSku": "Standard_DS1_v2",
+    "clientSku": "Standard_DS3_v2",
     "imageReference": {
       "publisher": "Canonical",
       "offer": "UbuntuServer",
@@ -359,12 +361,82 @@
       ]
     },
     {
+      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('clientName'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "clientVmLoop",
+        "count": 2
+      },
+      "dependsOn": [
+        "masterVmLoop",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[variables('clientSku')]"
+        },
+        "osProfile": {
+          "computerName": "[concat('client-vm', copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('imageReference')]",
+          "osDisk": {
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "[variables('storageAccountType')]"
+            }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), copyindex()))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('masterName'), copyindex(), '/installelasticsearch')]",
+          "apiVersion": "2016-04-30-preview",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', variables('clientName'), copyindex())]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "typeHandlerVersion": "2.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('elasticSetupScriptUrl')]",
+                "[variables('diskSetupScriptUrl')]"
+              ],
+              "commandToExecute": "[concat('bash install-elasticsearch.sh -c -n ', parameters('clusterName'))]"
+            }
+          }
+        }
+      ]
+    },
+    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[variables('namingInfix')]",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-04-30-preview",
       "dependsOn": [
         "masterVmLoop",
+        "clientVmLoop",
         "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "sku": {
@@ -388,7 +460,16 @@
               {
                 "lun": "0",
                 "createOption": "Empty",
-                "diskSizeGB": "128",
+                "diskSizeGB": "1023",
+                "caching": "ReadWrite",
+                "managedDisk": {
+                  "storageAccountType": "[variables('storageAccountType')]"
+                }
+              },
+              {
+                "lun": "1",
+                "createOption": "Empty",
+                "diskSizeGB": "1023",
                 "caching": "ReadWrite",
                 "managedDisk": {
                   "storageAccountType": "[variables('storageAccountType')]"
