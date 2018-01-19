@@ -201,11 +201,8 @@ setup_data_disk()
 install_java()
 {
     log "Installing Java"
-    add-apt-repository -y ppa:webupd8team/java
-    apt-get -y update  > /dev/null
-    echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-    echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-    apt-get -y install oracle-java8-installer  > /dev/null
+    BASE_URL_8=http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz
+    wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" "${BASE_URL_8}"
 }
 
 # Install Elasticsearch
