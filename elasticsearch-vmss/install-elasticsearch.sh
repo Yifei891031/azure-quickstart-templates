@@ -30,7 +30,7 @@ help()
     echo "  -n elasticsearch cluster name"
     echo "  -m configure as master node (default: true)"
     echo "  -d configure as data node (default: true)"
-    echo "  -d configure as client node (default: true)"
+    echo "  -c configure as client node (default: true)"
     echo "  -h view this help content"
 }
 
@@ -84,7 +84,7 @@ while getopts :n:mh optname; do
       IS_DATA_NODE=0
       IS_MASTER_NODE=0
       ;;
-    c) #set data mode
+    d) #set data mode
       IS_CLIENT_NODE=0
       IS_MASTER_NODE=0
       ;;
