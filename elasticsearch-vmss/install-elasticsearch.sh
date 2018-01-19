@@ -70,7 +70,7 @@ IS_CLIENT_NODE=1
 IS_MASTER_NODE=1
 
 #Loop through options passed
-while getopts :n:mh optname; do
+while getopts :n:mhcd optname; do
   log "Option $optname set with value ${OPTARG}"
   case $optname in
     n) #set cluster name
