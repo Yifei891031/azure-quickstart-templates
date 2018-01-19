@@ -28,7 +28,9 @@ help()
     echo "This script installs Elasticsearch on Ubuntu"
     echo "Parameters:"
     echo "  -n elasticsearch cluster name"
-    echo "  -m configure as master node (default: off)"
+    echo "  -m configure as master node (default: true)"
+    echo "  -d configure as data node (default: true)"
+    echo "  -d configure as client node (default: true)"
     echo "  -h view this help content"
 }
 
@@ -64,6 +66,8 @@ fi
 CLUSTER_NAME="es-azure"
 ES_VERSION="5.1.2"
 IS_DATA_NODE=1
+IS_CLIENT_NODE=1
+IS_MASTER_NODE=1
 
 #Loop through options passed
 while getopts :n:mh optname; do
@@ -74,6 +78,15 @@ while getopts :n:mh optname; do
       ;;
     m) #set master mode
       IS_DATA_NODE=0
+      IS_CLIENT_NODE=0
+      ;;
+    c) #set client mode
+      IS_DATA_NODE=0
+      IS_MASTER_NODE=0
+      ;;
+    c) #set data mode
+      IS_CLIENT_NODE=0
+      IS_MASTER_NODE=0
       ;;
     h) #show help
       help
@@ -162,9 +175,15 @@ configure_es()
 	if [ ${IS_DATA_NODE} -eq 1 ]; then
 	    echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
 	    echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
-	else
-        echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
+        echo "node.ingest: false" >> /etc/elasticsearch/elasticsearch.yml
+    elif [ ${IS_MASTER_NODE} -eq 1 ]; then
+    	echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
+	    echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
+        echo "node.ingest: false" >> /etc/elasticsearch/elasticsearch.yml
+	elif [ ${IS_CLIENT_NODE} -eq 1 ]; then
+        echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
         echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
+        echo "node.ingest: true" >> /etc/elasticsearch/elasticsearch.yml
 	fi
 }
 
