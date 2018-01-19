@@ -100,7 +100,7 @@ install_java()
     RETRY=0
     MAX_RETRY=5
     while [ $RETRY -lt $MAX_RETRY ]; do
-        log "Retry $RETRY: downloading jdk-8u151-linux-x64.tar.gz"
+        log "Retry $RETRY: downloading jdk-8u161-linux-x64.tar.gz"
         BASE_URL_8=http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz
         wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" "${BASE_URL_8}"
         if [ $? -ne 0 ]; then
