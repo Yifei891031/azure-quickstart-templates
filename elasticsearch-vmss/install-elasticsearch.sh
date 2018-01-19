@@ -151,7 +151,7 @@ install_es()
     bin/elasticsearch-plugin install x-pack --batch
     popd
     
-    if [ ${IS_DATA_NODE} -eq 0 ]; 
+    if [ ${IS_MASTER_NODE} -eq 1 ]; 
     then
         apt-get install -y kibana
         pushd /usr/share/kibana/
@@ -206,15 +206,14 @@ configure_system()
    
     chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
     
-    if [ ${IS_DATA_NODE} -eq 0 ]; 
-    then
+    if [ ${IS_MASTER_NODE} -eq 1 ]; then
         # Kibana    
         IPADDRESS=$(ip route get 8.8.8.8 | awk 'NR==1 {print $NF}')
         echo "server.host: \"$IPADDRESS\"" >> /etc/kibana/kibana.yml
         echo "elasticsearch.url: \"http://$IPADDRESS:9200\"" >> /etc/kibana/kibana.yml
         echo "xpack.security.enabled: false" >> /etc/kibana/kibana.yml
         chown -R kibana:kibana /usr/share/kibana
-    else
+    elif [ ${IS_DATA_NODE} -eq 1 ]; then
         # data disk
         DATA_DIR="/datadisks/disk1"
         if ! [ -f "vm-disk-utils-0.1.sh" ]; 
@@ -250,7 +249,7 @@ start_service()
         exit 1
     fi
     
-    if [ ${IS_DATA_NODE} -eq 0 ]; 
+    if [ ${IS_MASTER_NODE} -eq 1 ]; 
     then
         log "Starting Kibana on ${HOSTNAME}"
         systemctl enable kibana.service
