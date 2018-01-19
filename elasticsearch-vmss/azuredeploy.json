@@ -515,7 +515,7 @@
                     "fileUris": [
                       "[variables('elasticSetupScriptUrl')]"
                     ],
-                    "commandToExecute": "[concat('bash install-elasticsearch.sh -n ', parameters('clusterName'))]"
+                    "commandToExecute": "[concat('bash install-elasticsearch.sh -n -d', parameters('clusterName'))]"
                   }
                 }
               }
