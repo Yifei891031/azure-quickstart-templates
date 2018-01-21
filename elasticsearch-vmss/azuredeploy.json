@@ -21,7 +21,7 @@
       "metadata": {
         "description": "Number of VM instances (200 or less)."
       },
-      "defaultValue": 30,
+      "defaultValue": 2,
       "maxValue": 200
     },
     "adminUsername": {
@@ -355,75 +355,6 @@
                 "[variables('diskSetupScriptUrl')]"
               ],
               "commandToExecute": "[concat('bash install-elasticsearch.sh -m -n ', parameters('clusterName'))]"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "apiVersion": "2016-04-30-preview",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(variables('clientName'), copyindex())]",
-      "location": "[resourceGroup().location]",
-      "copy": {
-        "name": "clientVmLoop",
-        "count": 2
-      },
-      "dependsOn": [
-        "masterVmLoop",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyindex())]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
-      ],
-      "properties": {
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
-        },
-        "hardwareProfile": {
-          "vmSize": "[variables('clientSku')]"
-        },
-        "osProfile": {
-          "computerName": "[concat('client-vm', copyIndex())]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
-        },
-        "storageProfile": {
-          "imageReference": "[variables('imageReference')]",
-          "osDisk": {
-            "createOption": "FromImage",
-            "caching": "ReadWrite",
-            "managedDisk": {
-              "storageAccountType": "[variables('storageAccountType')]"
-            }
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), copyindex(3)))]"
-            }
-          ]
-        }
-      },
-      "resources": [
-        {
-          "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(variables('clientName'), copyindex(), '/installelasticsearch')]",
-          "apiVersion": "2016-04-30-preview",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', variables('clientName'), copyindex())]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Azure.Extensions",
-            "type": "CustomScript",
-            "typeHandlerVersion": "2.0",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[variables('elasticSetupScriptUrl')]",
-                "[variables('diskSetupScriptUrl')]"
-              ],
-              "commandToExecute": "[concat('bash install-elasticsearch.sh -c -n ', parameters('clusterName'))]"
             }
           }
         }
