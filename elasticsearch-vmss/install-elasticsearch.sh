@@ -211,7 +211,7 @@ configure_system()
         IPADDRESS=$(ip route get 8.8.8.8 | awk 'NR==1 {print $NF}')
         echo "server.host: \"$IPADDRESS\"" >> /etc/kibana/kibana.yml
         echo "elasticsearch.url: \"http://$IPADDRESS:9200\"" >> /etc/kibana/kibana.yml
-        echo "xpack.security.enabled: false" >> /etc/kibana/kibana.yml
+        echo "xpack.security.enabled: true" >> /etc/kibana/kibana.yml
         chown -R kibana:kibana /usr/share/kibana
     elif [ ${IS_DATA_NODE} -eq 1 ]; then
         # data disk
