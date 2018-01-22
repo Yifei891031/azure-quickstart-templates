@@ -151,7 +151,7 @@ install_es()
     bin/elasticsearch-plugin install x-pack --batch
     popd
     
-    if [ ${IS_MASTER_NODE} -eq 1 ]; 
+    if [ ${IS_CLIENT_NODE} -eq 1 ]; 
     then
         apt-get install -y kibana
         pushd /usr/share/kibana/
@@ -206,7 +206,7 @@ configure_system()
    
     chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
     
-    if [ ${IS_MASTER_NODE} -eq 1 ]; then
+    if [ ${IS_CLIENT_NODE} -eq 1 ]; then
         # Kibana    
         IPADDRESS=$(ip route get 8.8.8.8 | awk 'NR==1 {print $NF}')
         echo "server.host: \"$IPADDRESS\"" >> /etc/kibana/kibana.yml
@@ -249,7 +249,7 @@ start_service()
         exit 1
     fi
     
-    if [ ${IS_MASTER_NODE} -eq 1 ]; 
+    if [ ${IS_CLIENT_NODE} -eq 1 ]; 
     then
         log "Starting Kibana on ${HOSTNAME}"
         systemctl enable kibana.service
