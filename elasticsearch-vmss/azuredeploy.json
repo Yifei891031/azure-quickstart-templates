@@ -66,7 +66,7 @@
     "nicName": "[concat(variables('namingInfix'), '-nic')]",
     "masterName": "[concat(variables('namingInfix'), '-master')]",
     "clientName": "[concat(variables('namingInfix'), '-client')]",
-    "availabilitySetName": "[concat(variables('namingInfix'), '-master-set')]",
+    "availabilitySetName": "[concat(variables('namingInfix'), '-set')]",
     "nsgName": "[concat(variables('namingInfix'), '-master-nsg')]",
     "ipConfigName": "[concat(variables('namingInfix'), '-ipconfig')]",
     "frontendIpConfigId": "[concat(variables('loadBalancerId'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
@@ -251,15 +251,15 @@
       "name": "[variables('availabilitySetName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "platformUpdateDomainCount": 3,
-        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 5,
         "managed": true
       }
     },
     {
       "apiVersion": "2016-03-30",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('nicName'), copyindex())]",
+      "name": "[concat(variables('nicName'), '-master-', copyindex())]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]",
@@ -267,7 +267,7 @@
       ],
       "copy": {
         "name": "masterNodesNicLoop",
-        "count": 5
+        "count": 3
       },
       "properties": {
         "ipConfigurations": [
@@ -279,11 +279,6 @@
               "subnet": {
                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
               },
-              "loadBalancerBackendAddressPools": [
-                {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/backendAddressPools/', variables('backendPoolName'))]"
-                }
-              ],
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
               }
@@ -292,6 +287,42 @@
         ]
       }
     },
+    {
+        "apiVersion": "2016-03-30",
+        "type": "Microsoft.Network/networkInterfaces",
+        "name": "[concat(variables('nicName'), '-client-', copyindex())]",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))]",
+          "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+        ],
+        "copy": {
+          "name": "clientNodesNicLoop",
+          "count": 2
+        },
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfigmaster",
+              "properties": {
+                "privateIPAllocationMethod": "Static",
+                "privateIPAddress": "[concat('10.0.0.2', copyindex())]",
+                "subnet": {
+                  "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
+                },
+                "loadBalancerBackendAddressPools": [
+                  {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/backendAddressPools/', variables('backendPoolName'))]"
+                  }
+                ],
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+                }
+              }
+            }
+          ]
+        }
+      },
     {
       "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/virtualMachines",
@@ -302,7 +333,7 @@
         "count": 3
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyindex())]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-master-', copyindex())]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
       ],
       "properties": {
@@ -330,7 +361,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), copyindex()))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-master-', copyindex()))]"
             }
           ]
         }
@@ -371,7 +402,8 @@
         },
         "dependsOn": [
           "masterVmLoop",
-          "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyindex())]",
+          "[variables('namingInfix')]",
+          "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-client-', copyindex())]",
           "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
         ],
         "properties": {
@@ -399,7 +431,7 @@
           "networkProfile": {
             "networkInterfaces": [
               {
-                "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'), copyindex(3)))]"
+                "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicName'),'-client-', copyindex()))]"
               }
             ]
           }
