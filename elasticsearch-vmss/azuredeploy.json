@@ -251,8 +251,8 @@
       "name": "[variables('availabilitySetName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "platformUpdateDomainCount": 5,
-        "platformFaultDomainCount": 5,
+        "platformUpdateDomainCount": 3,
+        "platformFaultDomainCount": 3,
         "managed": true
       }
     },
