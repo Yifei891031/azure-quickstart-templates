@@ -24,6 +24,20 @@
             "defaultValue": 30,
             "maxValue": 200
         },
+        "masterCount": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of master nodes"
+            },
+            "defaultValue": 3
+        },
+        "clientCount": {
+            "type": "int",
+            "metadata": {
+                "description": "Number of client nodes"
+            },
+            "defaultValue": 2
+        },
         "adminUsername": {
             "type": "string",
             "metadata": {
@@ -256,7 +270,7 @@
             ],
             "copy": {
                 "name": "masterNodesNicLoop",
-                "count": 3
+                "count": "[parameters('masterCount')]"
             },
             "properties": {
                 "ipConfigurations": [
@@ -264,7 +278,7 @@
                         "name": "ipconfigmaster",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat('10.0.0.1', copyindex())]",
+                            "privateIPAddress": "[concat('10.0.0.', copyindex())]",
                             "subnet": {
                                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
                             },
@@ -295,7 +309,7 @@
                         "name": "ipconfigmaster",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat('10.0.0.2', copyindex())]",
+                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount')]",
                             "subnet": {
                                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
                             },
@@ -331,7 +345,7 @@
                         "name": "ipconfigmaster",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat('10.0.1.', copyindex())]",
+                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount'), parameters('clientCount')]",
                             "subnet": {
                                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
                             },
@@ -360,7 +374,9 @@
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-master-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": [
+                "[mod(int(copyIndex()),3)]"
+            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('masterSize')]"
@@ -423,7 +439,9 @@
                 "[concat(variables('dataName'), copyindex())]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-client-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": [
+                "[mod(int(copyIndex()),3)]"
+            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('clientSku')]"
@@ -485,7 +503,9 @@
                 "masterVmLoop",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-data-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": [
+                "[mod(int(copyIndex()),3)]"
+            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('vmSku')]"
