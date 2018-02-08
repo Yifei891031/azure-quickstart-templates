@@ -483,7 +483,6 @@
             },
             "dependsOn": [
                 "masterVmLoop",
-                "[variables('namingInfix')]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-client-', copyindex())]"
             ],
             "zones": ["[mod(int(copyIndex()),3)]"],
