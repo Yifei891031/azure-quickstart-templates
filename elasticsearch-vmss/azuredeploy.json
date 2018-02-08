@@ -524,11 +524,11 @@
             "resources": [
                 {
                     "type": "Microsoft.Compute/virtualMachines/extensions",
-                    "name": "[concat(variables('clientName'), copyindex(), '/installelasticsearch')]",
+                    "name": "[concat(variables('dataName'), copyindex(), '/installelasticsearch')]",
                     "apiVersion": "2016-04-30-preview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/', variables('clientName'), copyindex())]"
+                        "[concat('Microsoft.Compute/virtualMachines/', variables('dataName'), copyindex())]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Azure.Extensions",
