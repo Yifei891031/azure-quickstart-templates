@@ -360,7 +360,7 @@
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-master-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": ["[int(copyIndex())%3]"],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('masterSize')]"
@@ -420,10 +420,10 @@
             },
             "dependsOn": [
                 "masterVmLoop",
-                "[variables('namingInfix')]",
+                "[concat(variables('dataName'), copyindex())]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-client-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": ["[int(copyIndex())%3]"],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('clientSku')]"
@@ -486,7 +486,7 @@
                 "[variables('namingInfix')]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'),'-client-', copyindex())]"
             ],
-            "zones": ["[mod(int(copyIndex()),3)]"],
+            "zones": ["[int(copyIndex())%3]"],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[variables('vmSku')]"
