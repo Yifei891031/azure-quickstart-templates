@@ -309,7 +309,7 @@
                         "name": "ipconfigmaster",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount')]",
+                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount'))]",
                             "subnet": {
                                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
                             },
@@ -345,7 +345,7 @@
                         "name": "ipconfigmaster",
                         "properties": {
                             "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount'), parameters('clientCount')]",
+                            "privateIPAddress": "[concat('10.0.0.', add(copyindex(), parameters('masterCount'), parameters('clientCount'))]",
                             "subnet": {
                                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
                             },
