@@ -28,9 +28,7 @@ help()
     echo "This script installs Elasticsearch on Ubuntu"
     echo "Parameters:"
     echo "  -n elasticsearch cluster name"
-    echo "  -m configure as master node (default: true)"
-    echo "  -d configure as data node (default: true)"
-    echo "  -c configure as client node (default: true)"
+    echo "  -m configure as master node (default: off)"
     echo "  -h view this help content"
 }
 
@@ -66,11 +64,9 @@ fi
 CLUSTER_NAME="es-azure"
 ES_VERSION="5.1.2"
 IS_DATA_NODE=1
-IS_CLIENT_NODE=1
-IS_MASTER_NODE=1
 
 #Loop through options passed
-while getopts :n:mhcd optname; do
+while getopts :n:mh optname; do
   log "Option $optname set with value ${OPTARG}"
   case $optname in
     n) #set cluster name
@@ -78,15 +74,6 @@ while getopts :n:mhcd optname; do
       ;;
     m) #set master mode
       IS_DATA_NODE=0
-      IS_CLIENT_NODE=0
-      ;;
-    c) #set client mode
-      IS_DATA_NODE=0
-      IS_MASTER_NODE=0
-      ;;
-    d) #set data mode
-      IS_CLIENT_NODE=0
-      IS_MASTER_NODE=0
       ;;
     h) #show help
       help
@@ -103,7 +90,7 @@ done
 # Install Oracle Java
 install_java()
 {
-    if [ -f "jdk-8u161-linux-x64.tar.gz" ];
+    if [ -f "jdk-8u151-linux-x64.tar.gz" ];
     then
         log "Java already downloaded"
         return
@@ -113,9 +100,8 @@ install_java()
     RETRY=0
     MAX_RETRY=5
     while [ $RETRY -lt $MAX_RETRY ]; do
-        log "Retry $RETRY: downloading jdk-8u161-linux-x64.tar.gz"
-        BASE_URL_8=http://download.oracle.com/otn-pub/java/jdk/8u161-b12/2f38c3b165be4555a1fa6e98c45e0808/jdk-8u161-linux-x64.tar.gz
-        wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" "${BASE_URL_8}"
+        log "Retry $RETRY: downloading jdk-8u151-linux-x64.tar.gz"
+        wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
         if [ $? -ne 0 ]; then
             let RETRY=RETRY+1
         else
@@ -123,12 +109,12 @@ install_java()
         fi
     done
     if [ $RETRY -eq $MAX_RETRY ]; then
-        log "Failed to download jdk-8u161-linux-x64.tar.gz"
+        log "Failed to download jdk-8u151-linux-x64.tar.gz"
         exit 1
     fi
     
-    tar xzf jdk-8u161-linux-x64.tar.gz -C /var/lib
-    export JAVA_HOME=/var/lib/jdk1.8.0_161
+    tar xzf jdk-8u151-linux-x64.tar.gz -C /var/lib
+    export JAVA_HOME=/var/lib/jdk1.8.0_151
     export PATH=$PATH:$JAVA_HOME/bin
     log "JAVA_HOME: $JAVA_HOME"
     log "PATH: $PATH"
@@ -151,7 +137,7 @@ install_es()
     bin/elasticsearch-plugin install x-pack --batch
     popd
     
-    if [ ${IS_CLIENT_NODE} -eq 1 ]; 
+    if [ ${IS_DATA_NODE} -eq 0 ]; 
     then
         apt-get install -y kibana
         pushd /usr/share/kibana/
@@ -170,20 +156,14 @@ configure_es()
 	echo 'discovery.zen.ping.unicast.hosts: ["10.0.0.10", "10.0.0.11", "10.0.0.12"]' >> /etc/elasticsearch/elasticsearch.yml
 	echo "network.host: _site_" >> /etc/elasticsearch/elasticsearch.yml
 	echo "bootstrap.memory_lock: true" >> /etc/elasticsearch/elasticsearch.yml
-        echo "xpack.security.enabled: true" >> /etc/elasticsearch/elasticsearch.yml
+        echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml
 
 	if [ ${IS_DATA_NODE} -eq 1 ]; then
 	    echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
 	    echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
-        echo "node.ingest: false" >> /etc/elasticsearch/elasticsearch.yml
-    elif [ ${IS_MASTER_NODE} -eq 1 ]; then
-    	echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
-	    echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
-        echo "node.ingest: false" >> /etc/elasticsearch/elasticsearch.yml
-	elif [ ${IS_CLIENT_NODE} -eq 1 ]; then
-        echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
+	else
+        echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
         echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
-        echo "node.ingest: true" >> /etc/elasticsearch/elasticsearch.yml
 	fi
 }
 
@@ -206,16 +186,17 @@ configure_system()
    
     chown -R elasticsearch:elasticsearch /usr/share/elasticsearch
     
-    if [ ${IS_CLIENT_NODE} -eq 1 ]; then
+    if [ ${IS_DATA_NODE} -eq 0 ]; 
+    then
         # Kibana    
         IPADDRESS=$(ip route get 8.8.8.8 | awk 'NR==1 {print $NF}')
         echo "server.host: \"$IPADDRESS\"" >> /etc/kibana/kibana.yml
         echo "elasticsearch.url: \"http://$IPADDRESS:9200\"" >> /etc/kibana/kibana.yml
-        echo "xpack.security.enabled: true" >> /etc/kibana/kibana.yml
+        echo "xpack.security.enabled: false" >> /etc/kibana/kibana.yml
         chown -R kibana:kibana /usr/share/kibana
-    elif [ ${IS_DATA_NODE} -eq 1 ]; then
+    else
         # data disk
-        DATA_DIR="/datadisks/disk1"
+        DATA_DIR="[/datadisks/disk1,/datadisks/disk2]"
         if ! [ -f "vm-disk-utils-0.1.sh" ]; 
         then
             DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh"
@@ -249,7 +230,7 @@ start_service()
         exit 1
     fi
     
-    if [ ${IS_CLIENT_NODE} -eq 1 ]; 
+    if [ ${IS_DATA_NODE} -eq 0 ]; 
     then
         log "Starting Kibana on ${HOSTNAME}"
         systemctl enable kibana.service
