@@ -216,7 +216,7 @@ configure_system()
         chown -R kibana:kibana /usr/share/kibana
     elif [ ${IS_DATA_NODE} -eq 1 ]; then
         # data disk
-        DATA_DIR="[/datadisks/disk1,/datadisks/disk2]"
+        DATA_DIR="/datadisks/disk1:/datadisks/disk2"
         if ! [ -f "vm-disk-utils-0.1.sh" ]; 
         then
             DOWNLOAD_SCRIPT="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/shared_scripts/ubuntu/vm-disk-utils-0.1.sh"
@@ -229,7 +229,7 @@ configure_system()
         then
             log "Disk setup successful, using $DATA_DIR"
             chown -R elasticsearch:elasticsearch $DATA_DIR
-            echo "DATA_DIR=$DATA_DIR" >> /etc/default/elasticsearch
+            #echo "DATA_DIR=$DATA_DIR" >> /etc/default/elasticsearch
         else
             log "Disk setup failed, using default data storage location"
         fi
