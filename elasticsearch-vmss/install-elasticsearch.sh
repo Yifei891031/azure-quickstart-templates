@@ -176,6 +176,7 @@ configure_es()
 	    echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
 	    echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
         echo "node.ingest: false" >> /etc/elasticsearch/elasticsearch.yml
+	echo "path.data: [/datadisks/disk1, /datadisks/disk2]" >> /etc/elasticsearch/elasticsearch.yml
     elif [ ${IS_MASTER_NODE} -eq 1 ]; then
     	echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
 	    echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
