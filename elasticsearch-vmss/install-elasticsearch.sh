@@ -228,7 +228,9 @@ configure_system()
         if [ $? -eq 0 ] && [ -d "$DATA_DIR" ];
         then
             log "Disk setup successful, using $DATA_DIR"
-            chown -R elasticsearch:elasticsearch $DATA_DIR
+	    sudo chmod 777 /datadisks/disk1
+	    sudo chmod 777 /datadisks/disk2
+            #chown -R elasticsearch:elasticsearch $DATA_DIR
             #echo "DATA_DIR=$DATA_DIR" >> /etc/default/elasticsearch
         else
             log "Disk setup failed, using default data storage location"
